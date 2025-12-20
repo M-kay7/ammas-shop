@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Ammas.jp Online Shop</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="header">
+    <div class="wrap row">
+      <div class="brand">
+        <div class="brand-title">Ammas.jp</div>
+        <div class="brand-sub">JP Grocery Shop</div>
+      </div>
+      <div class="meta">
+        <span class="pill" id="currencyPill">JPY</span>
+        <span class="pill" id="taxPill">Tax 10%</span>
+        <button class="cartBtn" id="openCartBtn">🛒 Cart (<b id="cartCount">0</b>)</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="wrap grid">
+    <section class="card">
+      <h2>Combos</h2>
+      <div id="combos" class="stack"></div>
+
+      <h2 style="margin-top:18px;">Products</h2>
+      <div id="cats" class="tabs"></div>
+      <div id="products" class="products"></div>
+    </section>
+
+    <aside class="card cartPanel" id="cartPanel">
+      <div class="row space">
+        <h2>Your Cart</h2>
+        <button class="linkBtn" id="closeCartBtn">Close</button>
+      </div>
+
+      <div class="muted" id="cartEmpty">Cart is empty.</div>
+      <div id="cartItems" class="stack"></div>
+
+      <hr />
+
+      <div class="totals">
+        <div class="row space"><span>Subtotal</span><b id="subTotal">0</b></div>
+        <div class="row space"><span>Handling</span><b id="handlingFee">0</b></div>
+        <div class="row space"><span>Tax</span><b id="taxAmt">0</b></div>
+        <div class="row space grand"><span>Total</span><b id="grandTotal">0</b></div>
+      </div>
+
+      <div class="stack" style="margin-top:12px;">
+        <label class="label">Customer Name</label>
+        <input id="custName" class="input" placeholder="Your name" />
+        <label class="label">Address</label>
+        <textarea id="custAddr" class="input" rows="3" placeholder="Delivery address"></textarea>
+
+        <button class="primary" id="whatsBtn">Order via WhatsApp</button>
+        <div class="muted small">Payment: WhatsApp order now (add online payment later)</div>
+      </div>
+    </aside>
+  </main>
+
+  <footer class="footer">
+    <div class="wrap muted small">
+      © <span id="year"></span> Ammas.jp — Online Hypermart
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
