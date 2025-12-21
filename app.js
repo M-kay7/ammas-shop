@@ -1,389 +1,227 @@
 /***********************
- * Amma's Shop - app.js
- * Works with Apps Script:
- *   ?route=data  -> returns { site, products, combos, comboItems, alternatives }
- ************************/
+ * Amma’s Online Shop
+ * Netlify + Google Apps Script
+ * Compatible with current API JSON
+ ***********************/
 
-// ✅ CHANGE THIS ONLY if your Apps Script URL changes
+// 🔗 API URL (CONFIRMED WORKING)
 const API_URL =
-  "https://script.google.com/macros/s/AKfycbyD6I4PO5YxyZmdtVA7C7q9YpDTquBhgk7BPFl5BXmQgqed7IdWXh5sx6udU6HiTiTm/exec?route=data";
+  "https://script.google.com/macros/s/AKfycbyD6I4POhttps://script.google.com/macros/s/AKfycby7mYXF5WyIgKjkTCjwnwxTReyiklE6GDJ1n5jVOMv3fC0argC0IxJrk124M2TktnpL/exec5YxyZmdtVA7C7q9YpDTquBhgk7BPFl5BXmQgqed7IdWXh5sx6udU6HiTiTm/exec?route=data";
 
-// Defaults (will be overwritten by API)
-let SITE = {
-  currency: "JPY",
-  tax_rate: 0.1,
-  whatsapp: "+8108099937224,
-};
-
+// 🛒 App State
 let PRODUCTS = [];
 let COMBOS = [];
 let COMBO_ITEMS = [];
 let ALTERNATIVES = {};
+let CART = [];
 
-// cart structure: { sku: qty }
-let CART = {};
-let CART_OPEN = true;
+// 🧾 Site config
+let SITE = {
+  currency: "JPY",
+  tax_rate: 0.1,
+  whatsapp: ""
+};
 
-function $(id) {
-  return document.getElementById(id);
+/* =========================
+   INIT
+========================= */
+document.addEventListener("DOMContentLoaded", init);
+
+function init() {
+  fetchData();
+  bindCartButtons();
 }
 
-function fmtMoney(n) {
-  // show as integer yen by default
-  try {
-    return new Intl.NumberFormat("ja-JP").format(Math.round(n));
-  } catch {
-    return String(Math.round(n));
-  }
+/* =========================
+   FETCH DATA
+========================= */
+function fetchData() {
+  fetch(API_URL)
+    .then(res => res.json())
+    .then(data => {
+      console.log("API DATA:", data);
+
+      SITE = data.site;
+      PRODUCTS = data.products || [];
+      COMBOS = data.combos || [];
+      COMBO_ITEMS = data.comboItems || [];
+      ALTERNATIVES = data.alternatives || {};
+
+      renderCategories(PRODUCTS);
+      renderProducts(PRODUCTS);
+      renderCombos(COMBOS);
+    })
+    .catch(err => console.error("API ERROR:", err));
 }
 
-function safeText(s) {
-  return String(s ?? "").replace(/[<>&"]/g, (c) => ({
-    "<": "&lt;",
-    ">": "&gt;",
-    "&": "&amp;",
-    '"': "&quot;",
-  }[c]));
+/* =========================
+   CATEGORY RENDER
+========================= */
+function renderCategories(products) {
+  const cats = [...new Set(products.map(p => p.category))];
+  const catBox = document.getElementById("cats");
+  if (!catBox) return;
+
+  catBox.innerHTML = cats
+    .map(
+      c => `<button class="cat-btn" onclick="filterCategory('${c}')">${c}</button>`
+    )
+    .join("");
 }
 
-function groupByCategory(products) {
-  const map = {};
-  for (const p of products) {
-    const cat = p.category || "Others";
-    if (!map[cat]) map[cat] = [];
-    map[cat].push(p);
-  }
-  return map;
+function filterCategory(cat) {
+  renderProducts(PRODUCTS.filter(p => p.category === cat));
 }
 
-function getProductBySku(sku) {
-  return PRODUCTS.find((p) => p.sku === sku) || null;
-}
-
-function getComboById(comboId) {
-  return COMBOS.find((c) => c.combo_id === comboId) || null;
-}
-
-function calcLinePrice(prod, qty) {
-  const unit = Number(prod.sell_price || 0);
-  return unit * qty;
-}
-
-function calcTotals() {
-  let subtotal = 0;
-
-  // cart products
-  for (const [sku, qty] of Object.entries(CART)) {
-    const prod = getProductBySku(sku);
-    if (!prod) continue;
-    subtotal += calcLinePrice(prod, qty);
-  }
-
-  const handling = 0; // keep as 0 for now
-  const taxRate = Number(SITE.tax_rate || 0);
-  const tax = (subtotal + handling) * taxRate;
-  const total = subtotal + handling + tax;
-
-  return { subtotal, handling, tax, total };
-}
-
-function updateHeaderPills() {
-  if ($("currencyPill")) $("currencyPill").textContent = SITE.currency || "JPY";
-  if ($("taxPill")) $("taxPill").textContent = `Tax ${Math.round((SITE.tax_rate || 0) * 100)}%`;
-}
-
-function updateCartCount() {
-  const count = Object.values(CART).reduce((a, b) => a + b, 0);
-  if ($("cartCount")) $("cartCount").textContent = String(count);
-}
-
-function renderCombos() {
-  const box = $("combos");
+/* =========================
+   PRODUCTS RENDER
+========================= */
+function renderProducts(products) {
+  const box = document.getElementById("products");
   if (!box) return;
 
-  if (!COMBOS.length) {
-    box.innerHTML = `<p class="muted small">No combos available.</p>`;
-    return;
-  }
-
-  box.innerHTML = COMBOS.map((c) => {
-    const title = safeText(c.title || c.combo_id);
-    const desc = safeText(c.description || "");
-    const dtype = c.discount_type || "";
-    const dval = Number(c.discount_value || 0);
-
-    return `
-      <div class="prod">
-        <h3>${title}</h3>
-        <div class="muted small">${desc}</div>
-        <div class="small muted">Discount: ${dtype === "percent" ? dval + "%" : fmtMoney(dval)}</div>
-        <div class="btnRow">
-          <button class="btn primary" data-add-combo="${safeText(c.combo_id)}">Add Combo</button>
-        </div>
+  box.innerHTML = products
+    .map(
+      p => `
+      <div class="card">
+        <h4>${p.name}</h4>
+        <p class="muted">${p.unit}</p>
+        <p class="price">¥${p.sell_price}</p>
+        <button onclick="addToCart('${p.sku}', 'product')">Add</button>
       </div>
-    `;
-  }).join("");
-
-  // listeners
-  box.querySelectorAll("[data-add-combo]").forEach((btn) => {
-    btn.addEventListener("click", () => addComboToCart(btn.getAttribute("data-add-combo")));
-  });
+    `
+    )
+    .join("");
 }
 
-function addComboToCart(comboId) {
-  // Add all items from comboItems list into cart
-  const items = COMBO_ITEMS.filter((x) => x.combo_id === comboId);
+/* =========================
+   COMBOS RENDER
+========================= */
+function renderCombos(combos) {
+  const box = document.getElementById("combos");
+  if (!box) return;
 
-  if (!items.length) {
-    alert("This combo has no items configured.");
-    return;
-  }
-
-  for (const it of items) {
-    const sku = it.sku;
-    const qty = Number(it.qty || 1);
-    CART[sku] = (CART[sku] || 0) + qty;
-  }
-
-  updateCartCount();
-  renderCart();
-  openCart();
-}
-
-function renderCategoryTabs(catMap) {
-  const tabs = $("cats");
-  if (!tabs) return;
-
-  const cats = Object.keys(catMap);
-  if (!cats.length) {
-    tabs.innerHTML = "";
-    return;
-  }
-
-  // first category active by default
-  const active = tabs.getAttribute("data-active") || cats[0];
-  tabs.setAttribute("data-active", active);
-
-  tabs.innerHTML = cats.map((c) => {
-    const cls = c === active ? "tab active" : "tab";
-    return `<button class="${cls}" data-cat="${safeText(c)}">${safeText(c)}</button>`;
-  }).join("");
-
-  tabs.querySelectorAll("[data-cat]").forEach((b) => {
-    b.addEventListener("click", () => {
-      tabs.setAttribute("data-active", b.getAttribute("data-cat"));
-      renderProducts();
-    });
-  });
-}
-
-function renderProducts() {
-  const grid = $("products");
-  if (!grid) return;
-
-  if (!PRODUCTS.length) {
-    grid.innerHTML = `<p class="muted small">No products available.</p>`;
-    return;
-  }
-
-  const catMap = groupByCategory(PRODUCTS);
-  renderCategoryTabs(catMap);
-
-  const tabs = $("cats");
-  const activeCat = tabs ? (tabs.getAttribute("data-active") || Object.keys(catMap)[0]) : Object.keys(catMap)[0];
-  const list = (catMap[activeCat] || []).slice();
-
-  grid.innerHTML = list.map((p) => {
-    const sku = safeText(p.sku);
-    const name = safeText(p.name);
-    const unit = safeText(p.unit || "");
-    const price = Number(p.sell_price || 0);
-    const stock = Number(p.stock ?? 0);
-
-    return `
-      <div class="prod">
-        <h3>${name}</h3>
-        <div class="muted small">${unit} • Stock: ${stock}</div>
-        <div class="price">${SITE.currency} ${fmtMoney(price)}</div>
-        <div class="btnRow">
-          <button class="btn" data-sub="${sku}">-</button>
-          <button class="btn primary" data-add="${sku}">Add</button>
-        </div>
+  box.innerHTML = combos
+    .map(
+      c => `
+      <div class="card combo">
+        <h4>${c.title}</h4>
+        <p>${c.description}</p>
+        <button onclick="addToCart('${c.combo_id}', 'combo')">
+          Add Combo
+        </button>
       </div>
-    `;
-  }).join("");
-
-  grid.querySelectorAll("[data-add]").forEach((b) => b.addEventListener("click", () => addSku(b.getAttribute("data-add"))));
-  grid.querySelectorAll("[data-sub]").forEach((b) => b.addEventListener("click", () => subSku(b.getAttribute("data-sub"))));
+    `
+    )
+    .join("");
 }
 
-function addSku(sku) {
-  const p = getProductBySku(sku);
-  if (!p) return;
+/* =========================
+   CART LOGIC
+========================= */
+function addToCart(id, type) {
+  const existing = CART.find(i => i.id === id);
 
-  const stock = Number(p.stock ?? 0);
-  const current = CART[sku] || 0;
-
-  if (stock > 0 && current + 1 > stock) {
-    alert("Out of stock.");
-    return;
+  if (existing) {
+    existing.qty++;
+  } else {
+    CART.push({ id, type, qty: 1 });
   }
 
-  CART[sku] = current + 1;
-  updateCartCount();
-  renderCart();
-  openCart();
+  updateCartUI();
 }
 
-function subSku(sku) {
-  if (!CART[sku]) return;
-  CART[sku] -= 1;
-  if (CART[sku] <= 0) delete CART[sku];
-  updateCartCount();
+function updateCartUI() {
+  const count = CART.reduce((s, i) => s + i.qty, 0);
+  const cartCount = document.getElementById("cartCount");
+  if (cartCount) cartCount.innerText = count;
+
   renderCart();
 }
 
 function renderCart() {
-  const itemsBox = $("cartItems");
-  if (!itemsBox) return;
+  const box = document.getElementById("cartItems");
+  if (!box) return;
 
-  const skus = Object.keys(CART);
+  let subtotal = 0;
 
-  if (!skus.length) {
-    itemsBox.innerHTML = `<p class="muted small">Cart is empty.</p>`;
-  } else {
-    itemsBox.innerHTML = skus.map((sku) => {
-      const p = getProductBySku(sku);
+  box.innerHTML = CART.map(item => {
+    let name = "";
+    let price = 0;
+
+    if (item.type === "product") {
+      const p = PRODUCTS.find(x => x.sku === item.id);
       if (!p) return "";
-      const qty = CART[sku];
-      const line = calcLinePrice(p, qty);
-
-      return `
-        <div class="cart-item">
-          <div>
-            <div><b>${safeText(p.name)}</b> <span class="muted small">(${safeText(p.unit || "")})</span></div>
-            <div class="muted small">${SITE.currency} ${fmtMoney(p.sell_price)} × ${qty} = <b>${fmtMoney(line)}</b></div>
-          </div>
-          <div class="qty">
-            <button class="btn" data-sub="${safeText(sku)}">-</button>
-            <span>${qty}</span>
-            <button class="btn" data-add="${safeText(sku)}">+</button>
-          </div>
-        </div>
-      `;
-    }).join("");
-
-    itemsBox.querySelectorAll("[data-add]").forEach((b) => b.addEventListener("click", () => addSku(b.getAttribute("data-add"))));
-    itemsBox.querySelectorAll("[data-sub]").forEach((b) => b.addEventListener("click", () => subSku(b.getAttribute("data-sub"))));
-  }
-
-  const t = calcTotals();
-  if ($("subTotal")) $("subTotal").textContent = fmtMoney(t.subtotal);
-  if ($("handling")) $("handling").textContent = fmtMoney(t.handling);
-  if ($("taxAmt")) $("taxAmt").textContent = fmtMoney(t.tax);
-  if ($("grandTotal")) $("grandTotal").textContent = fmtMoney(t.total);
-}
-
-function openCart() {
-  CART_OPEN = true;
-  const panel = $("cartPanel");
-  if (panel) panel.style.display = "block";
-}
-function closeCart() {
-  CART_OPEN = false;
-  const panel = $("cartPanel");
-  if (panel) panel.style.display = "none";
-}
-
-function buildWhatsappMessage() {
-  const name = ($("customerName")?.value || "").trim();
-  const addr = ($("customerAddress")?.value || "").trim();
-
-  const lines = [];
-  lines.push("🛒 *Ammas.jp Order*");
-  if (name) lines.push(`👤 Name: ${name}`);
-  if (addr) lines.push(`📍 Address: ${addr}`);
-  lines.push("");
-
-  const skus = Object.keys(CART);
-  if (!skus.length) {
-    lines.push("Cart is empty.");
-    return lines.join("\n");
-  }
-
-  lines.push("*Items:*");
-  for (const sku of skus) {
-    const p = getProductBySku(sku);
-    if (!p) continue;
-    const qty = CART[sku];
-    const price = Number(p.sell_price || 0);
-    lines.push(`- ${p.name} (${p.unit || ""}) × ${qty} = ${SITE.currency} ${fmtMoney(price * qty)}`);
-  }
-
-  const t = calcTotals();
-  lines.push("");
-  lines.push(`Subtotal: ${SITE.currency} ${fmtMoney(t.subtotal)}`);
-  lines.push(`Tax: ${SITE.currency} ${fmtMoney(t.tax)}`);
-  lines.push(`Total: ${SITE.currency} ${fmtMoney(t.total)}`);
-  lines.push("");
-  lines.push("✅ Please confirm availability & delivery time.");
-
-  return lines.join("\n");
-}
-
-function orderViaWhatsApp() {
-  const phone = String(SITE.whatsapp || "").replace(/\s/g, "");
-  if (!phone || phone.includes("XXXX")) {
-    alert("WhatsApp number is not configured in your API (site.whatsapp).");
-    return;
-  }
-
-  const msg = buildWhatsappMessage();
-  const url = `https://wa.me/${phone.replace(/^\+/, "")}?text=${encodeURIComponent(msg)}`;
-  window.open(url, "_blank");
-}
-
-async function loadData() {
-  updateHeaderPills();
-
-  try {
-    const res = await fetch(API_URL, { method: "GET" });
-    const json = await res.json();
-
-    SITE = json.site || SITE;
-    PRODUCTS = json.products || [];
-    COMBOS = json.combos || [];
-    COMBO_ITEMS = json.comboItems || [];
-    ALTERNATIVES = json.alternatives || {};
-
-    updateHeaderPills();
-    renderCombos();
-    renderProducts();
-    updateCartCount();
-    renderCart();
-  } catch (e) {
-    console.error(e);
-    const productsBox = $("products");
-    if (productsBox) {
-      productsBox.innerHTML = `<p class="muted small">❌ Failed to load data. Check API URL / CORS / Apps Script deploy.</p>`;
+      name = p.name;
+      price = p.sell_price;
+    } else {
+      const c = COMBOS.find(x => x.combo_id === item.id);
+      if (!c) return "";
+      name = c.title;
+      price = calculateComboPrice(c.combo_id);
     }
-  }
+
+    subtotal += price * item.qty;
+
+    return `
+      <div class="row">
+        <span>${name} × ${item.qty}</span>
+        <span>¥${price * item.qty}</span>
+      </div>
+    `;
+  }).join("");
+
+  const tax = subtotal * SITE.tax_rate;
+  const total = subtotal + tax;
+
+  document.getElementById("subTotal").innerText = `¥${subtotal}`;
+  document.getElementById("taxAmt").innerText = `¥${tax.toFixed(0)}`;
+  document.getElementById("grandTotal").innerText = `¥${total.toFixed(0)}`;
 }
 
-function bindUI() {
-  $("cartToggle")?.addEventListener("click", () => {
-    if (CART_OPEN) closeCart();
-    else openCart();
+/* =========================
+   COMBO PRICE CALC
+========================= */
+function calculateComboPrice(comboId) {
+  const items = COMBO_ITEMS.filter(i => i.combo_id === comboId);
+  let total = 0;
+
+  items.forEach(i => {
+    const p = PRODUCTS.find(x => x.sku === i.sku);
+    if (p) total += p.sell_price * i.qty;
   });
 
-  $("cartClose")?.addEventListener("click", () => closeCart());
+  const combo = COMBOS.find(c => c.combo_id === comboId);
+  if (!combo) return total;
 
-  $("orderBtn")?.addEventListener("click", orderViaWhatsApp);
+  if (combo.discount_type === "percent") {
+    total -= total * (combo.discount_value / 100);
+  }
+
+  return Math.round(total);
 }
 
-// boot
-document.addEventListener("DOMContentLoaded", () => {
-  bindUI();
-  openCart();
-  loadData();
-});
+/* =========================
+   WHATSAPP ORDER
+========================= */
+function bindCartButtons() {
+  const btn = document.getElementById("orderBtn");
+  if (!btn) return;
+
+  btn.onclick = () => {
+    const name = document.getElementById("customerName").value;
+    const addr = document.getElementById("customerAddress").value;
+
+    let msg = `🛒 *Amma's Online Order*\n\n👤 ${name}\n📍 ${addr}\n\n`;
+
+    CART.forEach(i => {
+      msg += `• ${i.id} × ${i.qty}\n`;
+    });
+
+    const total = document.getElementById("grandTotal").innerText;
+    msg += `\n💰 Total: ${total}`;
+
+    const url = `https://wa.me/${SITE.whatsapp}?text=${encodeURIComponent(msg)}`;
+    window.open(url, "_blank");
+  };
+}
