@@ -1,227 +1,169 @@
 /***********************
- * Amma’s Online Shop
- * Netlify + Google Apps Script
- * Compatible with current API JSON
+ * Ammas.jp Online Shop
+ * Frontend (Netlify)
  ***********************/
 
-// 🔗 API URL (CONFIRMED WORKING)
 const API_URL =
-  "https://script.google.com/macros/s/AKfycbyD6I4POhttps://script.google.com/macros/s/AKfycby7mYXF5WyIgKjkTCjwnwxTReyiklE6GDJ1n5jVOMv3fC0argC0IxJrk124M2TktnpL/exec5YxyZmdtVA7C7q9YpDTquBhgk7BPFl5BXmQgqed7IdWXh5sx6udU6HiTiTm/exec?route=data";
+  "https://script.google.com/macros/s/AKfycby7mYXF5WyIgKjkTCjwnwxTReyiklE6GDJ1n5jVOMv3fC0argC0IxJrk124M2TktnpL/exec?route=data";
 
-// 🛒 App State
+// STATE
 let PRODUCTS = [];
 let COMBOS = [];
 let COMBO_ITEMS = [];
-let ALTERNATIVES = {};
 let CART = [];
+let SITE = { currency: "JPY", tax_rate: 0.1, whatsapp: "" };
 
-// 🧾 Site config
-let SITE = {
-  currency: "JPY",
-  tax_rate: 0.1,
-  whatsapp: ""
-};
+// SHORTCUT
+const $ = id => document.getElementById(id);
 
-/* =========================
-   INIT
-========================= */
 document.addEventListener("DOMContentLoaded", init);
 
-function init() {
-  fetchData();
-  bindCartButtons();
+async function init() {
+  $("year").textContent = new Date().getFullYear();
+  bindUI();
+  await loadData();
+  renderCategories();
+  renderProducts();
+  renderCombos();
 }
 
-/* =========================
-   FETCH DATA
-========================= */
-function fetchData() {
-  fetch(API_URL)
-    .then(res => res.json())
-    .then(data => {
-      console.log("API DATA:", data);
-
-      SITE = data.site;
-      PRODUCTS = data.products || [];
-      COMBOS = data.combos || [];
-      COMBO_ITEMS = data.comboItems || [];
-      ALTERNATIVES = data.alternatives || {};
-
-      renderCategories(PRODUCTS);
-      renderProducts(PRODUCTS);
-      renderCombos(COMBOS);
-    })
-    .catch(err => console.error("API ERROR:", err));
+function bindUI() {
+  $("openCartBtn").onclick = () => $("cartPanel").classList.add("open");
+  $("closeCartBtn").onclick = () => $("cartPanel").classList.remove("open");
+  $("whatsBtn").onclick = sendWhatsAppOrder;
 }
 
-/* =========================
-   CATEGORY RENDER
-========================= */
-function renderCategories(products) {
-  const cats = [...new Set(products.map(p => p.category))];
-  const catBox = document.getElementById("cats");
-  if (!catBox) return;
+// LOAD API
+async function loadData() {
+  const res = await fetch(API_URL);
+  const data = await res.json();
 
-  catBox.innerHTML = cats
-    .map(
-      c => `<button class="cat-btn" onclick="filterCategory('${c}')">${c}</button>`
-    )
-    .join("");
+  SITE = data.site;
+  PRODUCTS = data.products;
+  COMBOS = data.combos;
+  COMBO_ITEMS = data.comboItems;
+
+  $("currencyPill").textContent = SITE.currency;
+  $("taxPill").textContent = `Tax ${SITE.tax_rate * 100}%`;
+}
+
+// ---------- PRODUCTS ----------
+function renderCategories() {
+  const cats = [...new Set(PRODUCTS.map(p => p.category))];
+  const el = $("categories");
+  el.innerHTML = `<button onclick="filterCategory('all')">All</button>`;
+  cats.forEach(c => {
+    el.innerHTML += `<button onclick="filterCategory('${c}')">${c}</button>`;
+  });
 }
 
 function filterCategory(cat) {
-  renderProducts(PRODUCTS.filter(p => p.category === cat));
+  renderProducts(cat);
 }
 
-/* =========================
-   PRODUCTS RENDER
-========================= */
-function renderProducts(products) {
-  const box = document.getElementById("products");
-  if (!box) return;
+function renderProducts(cat = "all") {
+  const box = $("products");
+  box.innerHTML = "";
 
-  box.innerHTML = products
-    .map(
-      p => `
-      <div class="card">
-        <h4>${p.name}</h4>
-        <p class="muted">${p.unit}</p>
-        <p class="price">¥${p.sell_price}</p>
-        <button onclick="addToCart('${p.sku}', 'product')">Add</button>
-      </div>
-    `
-    )
-    .join("");
+  PRODUCTS
+    .filter(p => cat === "all" || p.category === cat)
+    .forEach(p => {
+      box.innerHTML += `
+        <div class="product">
+          <b>${p.name}</b>
+          <div>${p.unit}</div>
+          <div>${SITE.currency} ${p.sell_price}</div>
+          <button onclick="addToCart('${p.sku}')">Add</button>
+        </div>`;
+    });
 }
 
-/* =========================
-   COMBOS RENDER
-========================= */
-function renderCombos(combos) {
-  const box = document.getElementById("combos");
-  if (!box) return;
+// ---------- COMBOS ----------
+function renderCombos() {
+  const box = $("combos");
+  box.innerHTML = "";
 
-  box.innerHTML = combos
-    .map(
-      c => `
-      <div class="card combo">
-        <h4>${c.title}</h4>
-        <p>${c.description}</p>
-        <button onclick="addToCart('${c.combo_id}', 'combo')">
-          Add Combo
-        </button>
-      </div>
-    `
-    )
-    .join("");
+  COMBOS.forEach(c => {
+    box.innerHTML += `
+      <div class="combo">
+        <b>${c.title}</b>
+        <div>${c.description}</div>
+        <button onclick="addCombo('${c.combo_id}')">Add Combo</button>
+      </div>`;
+  });
 }
 
-/* =========================
-   CART LOGIC
-========================= */
-function addToCart(id, type) {
-  const existing = CART.find(i => i.id === id);
-
-  if (existing) {
-    existing.qty++;
-  } else {
-    CART.push({ id, type, qty: 1 });
-  }
-
-  updateCartUI();
+// ---------- CART ----------
+function addToCart(sku) {
+  const found = CART.find(i => i.sku === sku);
+  if (found) found.qty++;
+  else CART.push({ type: "sku", sku, qty: 1 });
+  renderCart();
 }
 
-function updateCartUI() {
-  const count = CART.reduce((s, i) => s + i.qty, 0);
-  const cartCount = document.getElementById("cartCount");
-  if (cartCount) cartCount.innerText = count;
-
+function addCombo(combo_id) {
+  CART.push({ type: "combo", combo_id, qty: 1 });
   renderCart();
 }
 
 function renderCart() {
-  const box = document.getElementById("cartItems");
-  if (!box) return;
+  const box = $("cartItems");
+  box.innerHTML = "";
+  $("cartEmpty").style.display = CART.length ? "none" : "block";
 
   let subtotal = 0;
 
-  box.innerHTML = CART.map(item => {
-    let name = "";
+  CART.forEach((i, idx) => {
+    let label = "";
     let price = 0;
 
-    if (item.type === "product") {
-      const p = PRODUCTS.find(x => x.sku === item.id);
-      if (!p) return "";
-      name = p.name;
-      price = p.sell_price;
+    if (i.type === "sku") {
+      const p = PRODUCTS.find(x => x.sku === i.sku);
+      label = p.name;
+      price = p.sell_price * i.qty;
     } else {
-      const c = COMBOS.find(x => x.combo_id === item.id);
-      if (!c) return "";
-      name = c.title;
-      price = calculateComboPrice(c.combo_id);
+      const c = COMBOS.find(x => x.combo_id === i.combo_id);
+      label = c.title;
+      price = 0;
     }
 
-    subtotal += price * item.qty;
+    subtotal += price;
 
-    return `
-      <div class="row">
-        <span>${name} × ${item.qty}</span>
-        <span>¥${price * item.qty}</span>
-      </div>
-    `;
-  }).join("");
+    box.innerHTML += `
+      <div class="row space">
+        <span>${label} × ${i.qty}</span>
+        <b>${SITE.currency} ${price}</b>
+      </div>`;
+  });
 
   const tax = subtotal * SITE.tax_rate;
   const total = subtotal + tax;
 
-  document.getElementById("subTotal").innerText = `¥${subtotal}`;
-  document.getElementById("taxAmt").innerText = `¥${tax.toFixed(0)}`;
-  document.getElementById("grandTotal").innerText = `¥${total.toFixed(0)}`;
+  $("subTotal").textContent = subtotal.toFixed(0);
+  $("taxAmt").textContent = tax.toFixed(0);
+  $("grandTotal").textContent = total.toFixed(0);
+  $("cartCount").textContent = CART.length;
 }
 
-/* =========================
-   COMBO PRICE CALC
-========================= */
-function calculateComboPrice(comboId) {
-  const items = COMBO_ITEMS.filter(i => i.combo_id === comboId);
-  let total = 0;
+// ---------- WHATSAPP ----------
+function sendWhatsAppOrder() {
+  if (!CART.length) return alert("Cart is empty");
 
-  items.forEach(i => {
-    const p = PRODUCTS.find(x => x.sku === i.sku);
-    if (p) total += p.sell_price * i.qty;
+  const name = $("custName").value;
+  const addr = $("custAddr").value;
+
+  let msg = `🛒 *Ammas.jp Order*\n\n`;
+  CART.forEach(i => {
+    if (i.type === "sku") {
+      const p = PRODUCTS.find(x => x.sku === i.sku);
+      msg += `• ${p.name} x ${i.qty}\n`;
+    } else {
+      const c = COMBOS.find(x => x.combo_id === i.combo_id);
+      msg += `• ${c.title}\n`;
+    }
   });
 
-  const combo = COMBOS.find(c => c.combo_id === comboId);
-  if (!combo) return total;
-
-  if (combo.discount_type === "percent") {
-    total -= total * (combo.discount_value / 100);
-  }
-
-  return Math.round(total);
-}
-
-/* =========================
-   WHATSAPP ORDER
-========================= */
-function bindCartButtons() {
-  const btn = document.getElementById("orderBtn");
-  if (!btn) return;
-
-  btn.onclick = () => {
-    const name = document.getElementById("customerName").value;
-    const addr = document.getElementById("customerAddress").value;
-
-    let msg = `🛒 *Amma's Online Order*\n\n👤 ${name}\n📍 ${addr}\n\n`;
-
-    CART.forEach(i => {
-      msg += `• ${i.id} × ${i.qty}\n`;
-    });
-
-    const total = document.getElementById("grandTotal").innerText;
-    msg += `\n💰 Total: ${total}`;
-
-    const url = `https://wa.me/${SITE.whatsapp}?text=${encodeURIComponent(msg)}`;
-    window.open(url, "_blank");
-  };
+  msg += `\n👤 ${name}\n🏠 ${addr}`;
+  const url = `https://wa.me/${SITE.whatsapp}?text=${encodeURIComponent(msg)}`;
+  window.open(url, "_blank");
 }
