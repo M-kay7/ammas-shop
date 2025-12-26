@@ -3,33 +3,79 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Ammas.jp Online Shop</title>
+  <title>Ammas.jp – Indian Grocery Online</title>
   <link rel="stylesheet" href="style.css" />
 </head>
+
 <body>
 
+<!-- ================= HEADER ================= -->
 <header class="header">
-  <div class="wrap row">
+  <div class="wrap row space">
     <div class="brand">
       <div class="brand-title">Ammas.jp</div>
-      <div class="brand-sub">JP Grocery Shop</div>
+      <div class="brand-sub">Indian Grocery Store in Japan</div>
     </div>
     <div class="meta">
       <span class="pill" id="currencyPill">JPY</span>
       <span class="pill" id="taxPill">Tax 10%</span>
-      <button class="cartBtn" id="openCartBtn">🛒 Cart (<b id="cartCount">0</b>)</button>
+      <button class="cartBtn" id="openCartBtn">
+        🛒 Cart (<b id="cartCount">0</b>)
+      </button>
     </div>
   </div>
 </header>
 
+<!-- ================= HERO ================= -->
+<section class="hero wrap">
+  <div class="hero-box">
+    <h1>Indian Grocery Delivered to Your Doorstep</h1>
+    <p>
+      Monthly combo packs & daily essentials<br />
+      Fresh • Affordable • WhatsApp Ordering
+    </p>
+
+    <div class="hero-actions">
+      <button class="primary" onclick="document.getElementById('combosSection').scrollIntoView({behavior:'smooth'})">
+        View Combos
+      </button>
+      <button class="outline" onclick="document.getElementById('whatsBtn').scrollIntoView({behavior:'smooth'})">
+        Order via WhatsApp
+      </button>
+    </div>
+  </div>
+</section>
+
+<!-- ================= HOW IT WORKS ================= -->
+<section class="wrap how">
+  <div class="how-grid">
+    <div class="how-card">
+      <h3>1️⃣ Choose a Combo</h3>
+      <p>Start with a monthly essentials combo pack</p>
+    </div>
+    <div class="how-card">
+      <h3>2️⃣ Add Extra Items</h3>
+      <p>Add à la carte groceries as needed</p>
+    </div>
+    <div class="how-card">
+      <h3>3️⃣ Order on WhatsApp</h3>
+      <p>Confirm your order instantly via WhatsApp</p>
+    </div>
+  </div>
+</section>
+
+<!-- ================= MAIN CONTENT ================= -->
 <main class="wrap grid">
 
   <!-- PRODUCTS / COMBOS -->
-  <section class="card">
-    <h2>Combos</h2>
+  <section class="card" id="combosSection">
+    <h2>Combo Packs</h2>
+    <p class="muted small">
+      Combo selection is mandatory to unlock individual products
+    </p>
     <div id="combos" class="stack"></div>
 
-    <h2 style="margin-top:20px;">Products</h2>
+    <h2 style="margin-top:24px;">Products</h2>
     <div id="categories" class="tabs"></div>
     <div id="products" class="products"></div>
   </section>
@@ -53,22 +99,30 @@
       <div class="row space grand"><span>Total</span><b id="grandTotal">0</b></div>
     </div>
 
-    <div class="stack" style="margin-top:12px;">
+    <div class="stack" style="margin-top:14px;">
       <label>Customer Name</label>
       <input id="custName" class="input" placeholder="Your name" />
 
       <label>Delivery Address</label>
-      <textarea id="custAddr" class="input" rows="3"></textarea>
+      <textarea id="custAddr" class="input" rows="3" placeholder="Full delivery address"></textarea>
 
-      <button class="primary" id="whatsBtn">Order via WhatsApp</button>
+      <button class="primary" id="whatsBtn">
+        Order via WhatsApp
+      </button>
+
+      <p class="muted small" style="margin-top:6px;">
+        ✔ Cash on Delivery & PayPay accepted
+      </p>
     </div>
   </aside>
 
 </main>
 
+<!-- ================= FOOTER ================= -->
 <footer class="footer">
   <div class="wrap muted small">
-    © <span id="year"></span> Ammas.jp — Online Hypermart
+    © <span id="year"></span> Ammas.jp — Online Hypermart |
+    WhatsApp Support Available
   </div>
 </footer>
 

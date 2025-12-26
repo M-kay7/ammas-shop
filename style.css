@@ -1,3 +1,4 @@
+/* ================= ROOT ================= */
 :root{
   --bg:#f6f7fb;
   --card:#fff;
@@ -5,134 +6,242 @@
   --muted:#666;
   --border:#e6e6ef;
   --accent:#0a7a2a;
+  --accent-soft:#e9f6ee;
 }
 
+/* ================= BASE ================= */
 *{box-sizing:border-box}
-body{margin:0;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial;background:var(--bg);color:var(--text)}
+body{
+  margin:0;
+  font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial;
+  background:var(--bg);
+  color:var(--text)
+}
 .wrap{max-width:1100px;margin:0 auto;padding:14px 16px}
-.header{background:#fff;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:10}
 .row{display:flex;gap:12px;align-items:center}
 .space{justify-content:space-between}
+.stack{display:flex;flex-direction:column;gap:10px}
+.muted{color:var(--muted)}
+.small{font-size:12px}
+
+/* ================= HEADER ================= */
+.header{
+  background:#fff;
+  border-bottom:1px solid var(--border);
+  position:sticky;
+  top:0;
+  z-index:10
+}
 .brand-title{font-weight:800;font-size:20px}
 .brand-sub{font-size:12px;color:var(--muted)}
 .meta{margin-left:auto;display:flex;gap:8px;align-items:center}
-.pill{padding:6px 10px;border:1px solid var(--border);border-radius:999px;background:#fff;font-size:12px}
-.cartBtn{padding:9px 12px;border:0;border-radius:999px;background:#ff7a00;color:#fff;font-weight:700;cursor:pointer}
-.grid{display:grid;grid-template-columns:1.35fr .65fr;gap:16px}
-@media(max-width:980px){.grid{grid-template-columns:1fr}}
-.card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px}
-.stack{display:flex;flex-direction:column;gap:10px}
-.tabs{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
-.tab{padding:8px 10px;border-radius:999px;border:1px solid var(--border);background:#fff;cursor:pointer;font-size:13px}
-.tab.active{border-color:#111}
-.products{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
-@media(max-width:980px){.products{grid-template-columns:repeat(2,1fr)}}
-@media(max-width:560px){.products{grid-template-columns:1fr}}
-.prod{border:1px solid var(--border);border-radius:14px;padding:12px;background:#fff}
-.prod h3{margin:0 0 6px 0;font-size:15px}
-.muted{color:var(--muted)}
-.small{font-size:12px}
-.price{font-weight:800;margin-top:8px}
-.btnRow{display:flex;gap:8px;margin-top:10px}
-.btn{flex:1;padding:9px 10px;border-radius:10px;border:1px solid var(--border);background:#fff;cursor:pointer}
-.btn.primary{background:#111;color:#fff;border-color:#111}
-.cartPanel{position:sticky;top:78px;height:fit-content}
-.linkBtn{border:0;background:transparent;color:#0b5cff;cursor:pointer}
-.input{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:10px}
-.label{font-size:12px;color:var(--muted)}
-.primary{padding:11px 12px;border:0;border-radius:12px;background:var(--accent);color:#fff;font-weight:800;cursor:pointer}
-.totals .grand{font-size:16px}
-.footer{padding:18px 0}
-hr{border:0;border-top:1px solid var(--border);margin:14px 0}
-.products {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-  gap: 14px;
+.pill{
+  padding:6px 10px;
+  border:1px solid var(--border);
+  border-radius:999px;
+  background:#fff;
+  font-size:12px
+}
+.cartBtn{
+  padding:9px 14px;
+  border:0;
+  border-radius:999px;
+  background:#ff7a00;
+  color:#fff;
+  font-weight:800;
+  cursor:pointer
 }
 
-.product {
-  border: 1px solid #e6e6ef;
-  border-radius: 12px;
-  padding: 12px;
-  background: #fff;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.04);
-  transition: transform 0.15s ease;
+/* ================= HERO ================= */
+.hero{
+  margin-top:20px;
+}
+.hero-box{
+  background:linear-gradient(135deg,#0a7a2a,#0fbf61);
+  color:#fff;
+  border-radius:20px;
+  padding:50px 40px;
+}
+.hero h1{
+  font-size:34px;
+  margin:0 0 10px
+}
+.hero p{
+  font-size:18px;
+  opacity:.95;
+  line-height:1.5
+}
+.hero-actions{
+  margin-top:20px;
+  display:flex;
+  gap:12px;
+  flex-wrap:wrap
 }
 
-.product:hover {
-  transform: translateY(-3px);
+/* ================= BUTTONS ================= */
+.primary{
+  padding:12px 18px;
+  border:0;
+  border-radius:12px;
+  background:var(--accent);
+  color:#fff;
+  font-weight:800;
+  cursor:pointer
+}
+.outline{
+  padding:12px 18px;
+  border-radius:12px;
+  border:2px solid #fff;
+  background:transparent;
+  color:#fff;
+  font-weight:800;
+  cursor:pointer
+}
+.btn{
+  flex:1;
+  padding:9px 10px;
+  border-radius:10px;
+  border:1px solid var(--border);
+  background:#fff;
+  cursor:pointer
+}
+.btn.primary{
+  background:#111;
+  color:#fff;
+  border-color:#111
+}
+.linkBtn{
+  border:0;
+  background:transparent;
+  color:#0b5cff;
+  cursor:pointer
 }
 
-.product h4 {
-  margin: 8px 0 4px;
-  font-size: 15px;
+/* ================= HOW IT WORKS ================= */
+.how{
+  margin-top:24px;
+}
+.how-grid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:16px
+}
+.how-card{
+  background:#fff;
+  border:1px solid var(--border);
+  border-radius:16px;
+  padding:18px;
+  text-align:center
+}
+@media(max-width:800px){
+  .how-grid{grid-template-columns:1fr}
 }
 
-.price {
-  font-weight: 700;
-  color: #0a7a2a;
+/* ================= GRID ================= */
+.grid{
+  display:grid;
+  grid-template-columns:1.35fr .65fr;
+  gap:16px;
+  margin-top:24px
+}
+@media(max-width:980px){
+  .grid{grid-template-columns:1fr}
 }
 
-.product button {
-  width: 100%;
-  margin-top: 8px;
-}
-/* PRODUCT GRID */
-.products {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-  gap: 16px;
+/* ================= CARD ================= */
+.card{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:16px;
+  padding:16px
 }
 
-.product {
-  background: #fff;
-  border-radius: 14px;
-  padding: 12px;
-  border: 1px solid #e6e6ef;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
+/* ================= TABS ================= */
+.tabs{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  margin:10px 0
+}
+.tabs button,
+.tab{
+  padding:7px 14px;
+  border-radius:18px;
+  border:1px solid var(--border);
+  background:#f7f7f7;
+  cursor:pointer;
+  font-size:13px
+}
+.tabs button.active,
+.tab.active{
+  background:var(--accent);
+  color:#fff;
+  border-color:var(--accent)
 }
 
-.product:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 18px rgba(0,0,0,0.08);
+/* ================= PRODUCTS ================= */
+.products{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(180px,1fr));
+  gap:16px
+}
+.product{
+  background:#fff;
+  border-radius:14px;
+  padding:12px;
+  border:1px solid var(--border);
+  box-shadow:0 4px 12px rgba(0,0,0,.05);
+  transition:transform .15s ease,box-shadow .15s ease
+}
+.product:hover{
+  transform:translateY(-4px);
+  box-shadow:0 8px 18px rgba(0,0,0,.08)
+}
+.product h4{
+  font-size:15px;
+  margin:6px 0 2px
+}
+.product .unit{
+  font-size:12px;
+  color:var(--muted)
+}
+.product .price{
+  font-size:16px;
+  font-weight:800;
+  color:var(--accent);
+  margin:6px 0
+}
+.product button{
+  width:100%;
+  margin-top:8px
 }
 
-.product h4 {
-  font-size: 15px;
-  margin: 6px 0 2px;
+/* ================= CART ================= */
+.cartPanel{
+  position:sticky;
+  top:90px;
+  height:fit-content
+}
+.input{
+  width:100%;
+  padding:10px 12px;
+  border:1px solid var(--border);
+  border-radius:10px
+}
+.totals .grand{
+  font-size:16px;
+  font-weight:800
 }
 
-.product .unit {
-  font-size: 12px;
-  color: #666;
+/* ================= FOOTER ================= */
+.footer{
+  padding:20px 0;
+  margin-top:30px
 }
 
-.product .price {
-  font-size: 16px;
-  font-weight: 700;
-  color: #0a7a2a;
-  margin: 6px 0;
-}
-
-.product button {
-  width: 100%;
-}
-.cartPanel {
-  position: sticky;
-  top: 90px;
-  height: fit-content;
-}
-.tabs button {
-  border-radius: 18px;
-  padding: 6px 14px;
-  border: 1px solid #ddd;
-  background: #f7f7f7;
-  cursor: pointer;
-}
-
-.tabs button.active {
-  background: #0a7a2a;
-  color: #fff;
-  border-color: #0a7a2a;
+/* ================= MISC ================= */
+hr{
+  border:0;
+  border-top:1px solid var(--border);
+  margin:14px 0
 }
