@@ -80,6 +80,12 @@ body{
   gap:12px;
   flex-wrap:wrap
 }
+.hero-logo{
+  max-width: 280px;
+  width: 100%;
+  height: auto;
+  margin-bottom: 20px;
+}
 
 /* ================= BUTTONS ================= */
 .primary{
