@@ -35,16 +35,30 @@ body{
 .brand{
   display:flex;
   align-items:center;
-  gap:10px;
 }
-.logo{
-  height:48px;
-  max-width:160px;
+
+/* LOGO ONLY (NO TEXT) */
+.logo-header{
+  height:64px;
+  max-width:260px;
   object-fit:contain;
+  display:block;
 }
-.brand-title{font-weight:800;font-size:20px}
-.brand-sub{font-size:12px;color:var(--muted)}
-.meta{margin-left:auto;display:flex;gap:8px;align-items:center}
+
+/* Mobile logo adjustment */
+@media(max-width:600px){
+  .logo-header{
+    height:52px;
+    max-width:220px;
+  }
+}
+
+.meta{
+  margin-left:auto;
+  display:flex;
+  gap:8px;
+  align-items:center;
+}
 .pill{
   padding:6px 10px;
   border:1px solid var(--border);
@@ -91,12 +105,6 @@ body{
   display:flex;
   gap:12px;
   flex-wrap:wrap;
-}
-.hero-logo{
-  max-width:280px;
-  width:100%;
-  height:auto;
-  margin-bottom:20px;
 }
 
 /* ================= BUTTONS ================= */
@@ -233,36 +241,4 @@ body{
   margin:6px 0;
 }
 .product button{
-  width:100%;
-  margin-top:8px;
-}
-
-/* ================= CART ================= */
-.cartPanel{
-  position:sticky;
-  top:90px;
-  height:fit-content;
-}
-.input{
-  width:100%;
-  padding:10px 12px;
-  border:1px solid var(--border);
-  border-radius:10px;
-}
-.totals .grand{
-  font-size:16px;
-  font-weight:800;
-}
-
-/* ================= FOOTER ================= */
-.footer{
-  padding:20px 0;
-  margin-top:30px;
-}
-
-/* ================= MISC ================= */
-hr{
-  border:0;
-  border-top:1px solid var(--border);
-  margin:14px 0;
-}
+  width:10
